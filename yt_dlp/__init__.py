@@ -788,6 +788,10 @@ def parse_options(argv=None):
     default_cookie_path = os.path.join(os.getcwd(), 'cookies.txt')
     cookiefile_value = opts.cookiefile if opts.cookiefile else default_cookie_path
 
+    # 设置proxyfile的默认值为当前目录下的proxy.txt文件，如果命令行指定了其他值则使用指定值
+    default_proxy_path = os.path.join(os.getcwd(), 'proxy.txt')
+    proxyfile_value = opts.proxyfile if hasattr(opts, 'proxyfile') and opts.proxyfile else default_proxy_path
+
     return ParsedOptions(parser, opts, urls, {
         'usenetrc': opts.usenetrc,
         'netrc_location': opts.netrc_location,
@@ -911,6 +915,7 @@ def parse_options(argv=None):
         'break_per_url': opts.break_per_url,
         'skip_playlist_after_errors': opts.skip_playlist_after_errors,
         'cookiefile': cookiefile_value,  # 使用修改后的cookiefile值
+        'proxyfile': proxyfile_value,  # 新增的代理文件选项
         'cookiesfrombrowser': opts.cookiesfrombrowser,
         'legacyserverconnect': opts.legacy_server_connect,
         'nocheckcertificate': opts.no_check_certificate,
@@ -1070,13 +1075,13 @@ def _real_main(argv=None):
                 if attached_processes == 1 or (is_onefile and attached_processes == 2):
                     print(parser._generate_error_message(
                         '请勿双击可执行文件，而是通过命令行调用它。\n'
-                        '此版本为鸭鸭魔改版\n'
+                        '此版本为鸭鸭魔改版'
                         '有关如何使用 yt-dlp 的详细信息，请阅读 README： '
                         'https://github.com/yt-dlp/yt-dlp#readme'))
                     msvcrt.getch()
                     _exit(2)
             parser.error(
-                '您必须提供至少一个 URL\n'
+                '您必须提供至少一个 URL。\n'
                 '输入 yt-dlp --help 查看所有选项列表。')
 
         parser.destroy()
