@@ -1075,7 +1075,7 @@ def _real_main(argv=None):
                 if attached_processes == 1 or (is_onefile and attached_processes == 2):
                     print(parser._generate_error_message(
                         '请勿双击可执行文件，而是通过命令行调用它。\n'
-                        '此版本为鸭鸭魔改版'
+                        '此版本为鸭鸭魔改版\n'
                         '有关如何使用 yt-dlp 的详细信息，请阅读 README： '
                         'https://github.com/yt-dlp/yt-dlp#readme'))
                     msvcrt.getch()
