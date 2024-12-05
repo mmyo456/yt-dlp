@@ -14,7 +14,8 @@ import os
 import re
 import traceback
 
-from .cookies import SUPPORTED_BROWSERS, SUPPORTED_KEYRINGS, CookieLoadError
+# 从yt_dlp包中导入cookies模块
+from yt_dlp.cookies import SUPPORTED_BROWSERS, SUPPORTED_KEYRINGS, CookieLoadError
 from .downloader.external import get_external_downloader
 from .extractor import list_extractor_classes
 from .extractor.adobepass import MSO_INFO
@@ -783,6 +784,10 @@ def parse_options(argv=None):
         else opts.audioformat if (opts.extractaudio and opts.audioformat in FFmpegExtractAudioPP.SUPPORTED_EXTS)
         else None)
 
+    # 设置cookiefile的默认值为当前目录下的cookies.txt文件，如果命令行指定了其他值则使用指定值
+    default_cookie_path = os.path.join(os.getcwd(), 'cookies.txt')
+    cookiefile_value = opts.cookiefile if opts.cookiefile else default_cookie_path
+
     return ParsedOptions(parser, opts, urls, {
         'usenetrc': opts.usenetrc,
         'netrc_location': opts.netrc_location,
@@ -905,7 +910,7 @@ def parse_options(argv=None):
         'break_on_reject': opts.break_on_reject,
         'break_per_url': opts.break_per_url,
         'skip_playlist_after_errors': opts.skip_playlist_after_errors,
-        'cookiefile': opts.cookiefile,
+        'cookiefile': cookiefile_value,  # 使用修改后的cookiefile值
         'cookiesfrombrowser': opts.cookiesfrombrowser,
         'legacyserverconnect': opts.legacy_server_connect,
         'nocheckcertificate': opts.no_check_certificate,
@@ -1064,25 +1069,26 @@ def _real_main(argv=None):
                 is_onefile = hasattr(sys, '_MEIPASS') and os.path.basename(sys._MEIPASS).startswith('_MEI')
                 if attached_processes == 1 or (is_onefile and attached_processes == 2):
                     print(parser._generate_error_message(
-                        'Do not double-click the executable, instead call it from a command line.\n'
-                        'Please read the README for further information on how to use yt-dlp: '
+                        '请勿双击可执行文件，而是通过命令行调用它。\n'
+                        '此版本为鸭鸭魔改版\n'
+                        '有关如何使用 yt-dlp 的详细信息，请阅读 README： '
                         'https://github.com/yt-dlp/yt-dlp#readme'))
                     msvcrt.getch()
                     _exit(2)
             parser.error(
-                'You must provide at least one URL.\n'
-                'Type yt-dlp --help to see a list of all options.')
+                '您必须提供至少一个 URL。\n'
+                '输入 yt-dlp --help 查看所有选项列表。')
 
         parser.destroy()
         try:
             if opts.load_info_filename is not None:
                 if all_urls:
-                    ydl.report_warning('URLs are ignored due to --load-info-json')
+                    ydl.report_warning('由于使用 --load-info-json 会忽略 URL')
                 return ydl.download_with_info_file(expand_path(opts.load_info_filename))
             else:
                 return ydl.download(all_urls)
         except DownloadCancelled:
-            ydl.to_screen('Aborting remaining downloads')
+            ydl.to_screen('中止剩余的下载')
             return 101
 
 
@@ -1094,14 +1100,14 @@ def main(argv=None):
     except (CookieLoadError, DownloadError):
         _exit(1)
     except SameFileError as e:
-        _exit(f'ERROR: {e}')
+        _exit(f'错误： {e}')
     except KeyboardInterrupt:
-        _exit('\nERROR: Interrupted by user')
+        _exit('\n错误： 被用户中断')
     except BrokenPipeError as e:
         # https://docs.python.org/3/library/signal.html#note-on-sigpipe
         devnull = os.open(os.devnull, os.O_WRONLY)
         os.dup2(devnull, sys.stdout.fileno())
-        _exit(f'\nERROR: {e}')
+        _exit(f'\n错误: {e}')
     except optparse.OptParseError as e:
         _exit(2, f'\n{e}')
 
