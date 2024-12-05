@@ -1076,7 +1076,7 @@ def _real_main(argv=None):
                     msvcrt.getch()
                     _exit(2)
             parser.error(
-                '您必须提供至少一个 URL。\n'
+                '您必须提供至少一个 URL\n'
                 '输入 yt-dlp --help 查看所有选项列表。')
 
         parser.destroy()
