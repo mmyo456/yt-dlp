@@ -743,29 +743,40 @@ ParsedOptions = collections.namedtuple('ParsedOptions', ('parser', 'options', 'u
 
 
 def parse_options(argv=None):
-    """@returns ParsedOptions(parser, opts, urls, ydl_opts)"""
+    """
+    该函数用于解析命令行参数并设置相应的选项。
+    @returns ParsedOptions(parser, opts, urls, ydl_opts)
+    """
+    # 解析命令行参数，得到解析器、选项和URL列表
     parser, opts, urls = parseOpts(argv)
+    # 根据选项和URL列表获取最终的URL列表，考虑了批处理文件和详细程度等因素
     urls = get_urls(urls, opts.batchfile, -1 if opts.quiet and not opts.verbose else opts.verbose)
-
+    # 设置兼容性选项
     set_compat_opts(opts)
     try:
+        # 验证选项，可能会产生警告和弃用警告
         warnings, deprecation_warnings = validate_options(opts)
     except ValueError as err:
+        # 如果验证失败，使用解析器输出错误信息
         parser.error(f'{err}\n')
-
+    # 获取后处理器列表
     postprocessors = list(get_postprocessors(opts))
-
+    # 判断是否仅打印信息
     print_only = bool(opts.forceprint) and all(k not in opts.forceprint for k in POSTPROCESS_WHEN[3:])
+    # 判断是否有获取信息的操作
     any_getting = any(getattr(opts, k) for k in (
         'dumpjson', 'dump_single_json', 'getdescription', 'getduration', 'getfilename',
         'getformat', 'getid', 'getthumbnail', 'gettitle', 'geturl',
     ))
+    # 根据情况设置安静模式选项
     if opts.quiet is None:
         opts.quiet = any_getting or opts.print_json or bool(opts.forceprint)
-
+    # 筛选出播放列表的后处理器
     playlist_pps = [pp for pp in postprocessors if pp.get('when') == 'playlist']
+    # 判断是否要写入播放列表信息JSON
     write_playlist_infojson = (opts.writeinfojson and not opts.clean_infojson
-                               and opts.allow_playlist_files and opts.outtmpl.get('pl_infojson') != '')
+                               and opts.allow_playlist_files and opts.outtmpl.get('pl_infojson')!= '')
+    # 根据不同情况设置提取平面选项
     if not any((
         opts.extract_flat,
         opts.dump_single_json,
@@ -777,22 +788,19 @@ def parse_options(argv=None):
             opts.extract_flat = 'discard'
         elif playlist_pps == [{'key': 'FFmpegConcat', 'only_multi_video': True, 'when': 'playlist'}]:
             opts.extract_flat = 'discard_in_playlist'
-
+    # 确定最终的文件扩展名
     final_ext = (
         opts.recodevideo if opts.recodevideo in FFmpegVideoConvertorPP.SUPPORTED_EXTS
         else opts.remuxvideo if opts.remuxvideo in FFmpegVideoRemuxerPP.SUPPORTED_EXTS
         else opts.audioformat if (opts.extractaudio and opts.audioformat in FFmpegExtractAudioPP.SUPPORTED_EXTS)
         else None)
-
-    # 设置cookiefile的默认值为当前目录下的cookies.txt文件，如果命令行指定了其他值则使用指定值
-    default_cookie_path = os.path.join(os.getcwd(), 'cookies.txt')
-    cookiefile_value = opts.cookiefile if opts.cookiefile else default_cookie_path
-
+    # 设置cookiefile的默认值为当前目录下的cookies.txt文件，强制使用该文件
+    cookiefile_value = os.path.join(os.getcwd(), 'cookies.txt')
     # 设置proxyfile的默认值为当前目录下的proxy.txt文件，如果命令行指定了其他值则使用指定值
     default_proxy_path = os.path.join(os.getcwd(), 'proxy.txt')
     proxyfile_value = opts.proxyfile if hasattr(opts, 'proxyfile') and opts.proxyfile else default_proxy_path
-
     return ParsedOptions(parser, opts, urls, {
+        # 以下是将各种选项存储到一个字典中
         'usenetrc': opts.usenetrc,
         'netrc_location': opts.netrc_location,
         'netrc_cmd': opts.netrc_cmd,
@@ -1012,7 +1020,7 @@ def _real_main(argv=None):
                     return updater.restart()
                 # This code is reachable only for zip variant in py < 3.10
                 # It makes sense to exit here, but the old behavior is to continue
-                ydl.report_warning('Restart yt-dlp to use the updated version')
+                ydl.report_warning('重启 yt-dlp 以使用更新版本')
                 # return 100, 'ERROR: The program must exit for the update to complete'
         except Exception:
             traceback.print_exc()
@@ -1049,8 +1057,8 @@ def _real_main(argv=None):
                         for text in make_row(known_target, f'{known_handler} (not available)')
                     ])
 
-            ydl.to_screen('[info] Available impersonate targets')
-            ydl.to_stdout(render_table(['Client', 'OS', 'Source'], rows, extra_gap=2, delim='-'))
+            ydl.to_screen('[信息] 可用的假冒目标')
+            ydl.to_stdout(render_table(['客户端', 'OS', '来源'], rows, extra_gap=2, delim='-'))
             return
 
         if not actual_use:
